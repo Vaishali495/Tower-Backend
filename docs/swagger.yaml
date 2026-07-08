@@ -1,0 +1,1945 @@
+openapi: 3.0.0
+
+info:
+  title: Vista Tower API
+  version: 1.0.0
+  description: API documentation for Vista Tower Backend
+
+servers:
+  - url: https://vista-tower-backend.onrender.com
+    description: Production Server
+
+  - url: http://localhost:3000
+    description: Local Development Server
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+security:
+  - bearerAuth: []
+
+paths:
+  /:
+    get:
+      summary: Test API
+      tags:
+        - Root
+
+      responses:
+        200:
+          description: API is running
+
+  # Auth routes
+  /api/auth/login:
+    post:
+      summary: Login for Admin and User
+      description: Authenticate a user or admin using email, password, and FCM token.
+      tags:
+        - Auth
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+                - fcmToken
+
+              properties:
+                email:
+                  type: string
+                  example: test@yopmail.com
+
+                password:
+                  type: string
+                  example: Test@1234
+
+                fcmToken:
+                  type: string
+                  example: fcm_token_abc123
+
+      responses:
+        201:
+          description: Login successfull
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+                  message:
+                    type: string
+                    example: Login successfull
+
+                  role:
+                    type: string
+                    example: user
+
+                  jwttoken:
+                    type: string
+                    example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+                  user:
+                    type: object
+
+        400:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  message:
+                    type: string
+                    example: User not found
+
+        401:
+          description: Invalid credentials or missing fields
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  message:
+                    type: string
+                    example: Invalid credentials
+
+        500:
+          description: Login failed
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Login failed
+
+  /api/auth/logout:
+    post:
+      summary: Logout authenticated user or admin
+      description: Logs out the authenticated user or admin by validating the JWT token.
+      tags:
+        - Auth
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+
+              properties:
+                fcmToken:
+                  type: string
+                  example: fcm_token_abc123
+                  description: FCM token to be removed from the user during logout
+
+      responses:
+        200:
+          description: Logout successfull
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+                  message:
+                    type: string
+                    example: Logout successfull
+
+        401:
+          description: Unauthorized - token missing
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+
+                  message:
+                    type: string
+                    example: Unauthorized
+
+  # User routes
+  /api/user/add-admin:
+    post:
+      summary: Create a new admin
+      description: Create a new admin user with required details.
+      tags:
+        - User
+
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+
+              required:
+                - email
+                - password
+                - name
+                - mobileNumber
+
+              properties:
+                name:
+                  type: string
+                  example: abc
+
+                email:
+                  type: string
+                  example: test@yopmail.com
+                  
+                password:
+                  type: string
+                  example: Test@1234
+
+                confirmPassword:
+                  type: string
+                  example: Test@1234
+
+                mobileNumber:
+                  type: string
+                  example: "9876543210"
+
+                image:
+                  type: string
+                  format: binary
+
+      responses:
+        201:
+          description: Admin created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  message:
+                    type: string
+                    example: User created successfully
+
+        400:
+          description: Invalid request data or user already exists
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  message:
+                    type: string
+                    example: Data Missing
+
+        500:
+          description: Failed to create admin
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Failed to create admin
+
+  /api/user/getuser/{userId}:
+    get:
+      summary: Get user details by ID
+      description: Retrieve user information using the unique user ID.
+      tags:
+        - User
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          description: MongoDB user ID
+
+          schema:
+            type: string
+            example: 661b7c3d9a8f2c0012345678
+
+      responses:
+        200:
+          description: User fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                example:
+                  _id: 661b7c3d9a8f2c0012345678
+                  name: abc
+                  email: abc@example.com
+                  role: user
+
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+
+        500:
+          description: Failed to fetch user by ID
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Failed to fetch user by ID
+
+  /api/user/adduser:
+    post:
+      summary: Add a new user
+      description: Create a new user with profile and login details.
+      tags:
+        - User
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+
+              required:
+                - email
+                - password
+                - role
+                - name
+                - mobileNumber
+
+              properties:
+                name:
+                  type: string
+                  example: abc
+
+                email:
+                  type: string
+                  example: test@yopmail.com
+
+                password:
+                  type: string
+                  example: Test@1234
+
+                confirmPassword:
+                  type: string
+                  example: Test@1234
+
+                role:
+                  type: string
+                  enum:
+                    - Tenant
+                    - Technician
+                  example: Tenant
+
+                mobileNumber:
+                  type: string
+                  example: "9876543210"
+
+                floor:
+                  type: string
+                  example: 3
+
+                companyName:
+                  type: string
+                  example: OpenAI Pvt Ltd
+
+                building:
+                  type: string
+                  example: Tower A
+
+                designation:
+                  type: string
+                  enum:
+                    - Electrician
+                    - Plumber
+                    - Carpenter
+                    - Ac Technician
+                    - Painter
+                    - Cleaner
+                  example: Electrician
+
+                experience:
+                  type: number
+                  example: 0
+
+                image:
+                  type: string
+                  format: binary
+
+      responses:
+        201:
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  message:
+                    type: string
+                    example: User created successfully
+
+        400:
+          description: Invalid request data or user already exists
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Data Missing
+
+                  message:
+                    type: string
+                    example: Please check you have not provided all the required data.
+
+        500:
+          description: Failed to create user
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Failed to create user
+
+  /api/user/update-password:
+    put:
+      summary: Update user password
+      description: Update password for a specific user.
+      tags:
+        - User
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+
+              required:
+                - userId
+                - password
+                - confirmPassword
+
+              properties:
+                userId:
+                  type: string
+                  example: 69e0d499ff0b24acdbc7bcf9
+
+                password:
+                  type: string
+                  example: Test@1234
+
+                confirmPassword:
+                  type: string
+                  example: Test@1234
+
+      responses:
+        200:
+          description: Password updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  message:
+                    type: string
+                    example: Password updated successfully
+
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: User not found
+
+        500:
+          description: Failed to update password
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Failed to update password
+
+  /api/user/update-profile:
+    put:
+      summary: Update user profile
+      description: Update the logged-in user's profile details.
+      tags:
+        - User
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+
+              required:
+                - userId
+
+              properties:
+                userId:
+                  type: string
+                  example: 69e0d499ff0b24acdbc7bcf9
+
+                companyName:
+                  type: string
+                  example: OpenAI Pvt Ltd
+
+                name:
+                  type: string
+                  example: abc
+
+                mobileNumber:
+                  type: string
+                  example: "9876543210"
+
+                floor:
+                  type: string
+                  example: 3
+
+                building:
+                  type: string
+                  example: Tower A
+
+                designation:
+                  type: string
+                  enum:
+                    - Electrician
+                    - Plumber
+                    - Carpenter
+                    - Ac Technician
+                    - Painter
+                    - Cleaner
+                  example: Electrician
+
+                experience:
+                  type: number
+                  example: 2
+
+                image:
+                  type: string
+                  format: binary
+
+      responses:
+        200:
+          description: User profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+                  message:
+                    type: string
+                    example: User profile updated successfully
+
+                  user:
+                    type: object
+
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+
+                  message:
+                    type: string
+                    example: User not found
+
+        400:
+          description: Failed to update user
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+
+                  message:
+                    type: string
+                    example: Failed to update user
+
+  /api/user/userslist:
+    get:
+      summary: Get users list
+      description: Fetch the list of all users excluding password and confirmPassword fields.
+      tags:
+        - User
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: query
+          name: role
+          required: false
+
+          schema:
+            type: string
+            enum:
+              - Tenant
+              - Admin
+              - Technician
+            example: Tenant
+
+          description: Filter users by role
+
+        - in: query
+          name: page
+          required: false
+
+          schema:
+            type: integer
+            example: 1
+
+          description: Page number
+
+        - in: query
+          name: limit
+          required: false
+
+          schema:
+            type: integer
+            example: 20
+
+          description: Number of users per page
+
+      responses:
+        200:
+          description: Users list fetched successfully
+          content:
+            application/json:
+              schema:
+                type: array
+
+                items:
+                  type: object
+                  example:
+                    _id: 661b7c3d9a8f2c0012345678
+                    name: abc
+                    email: abc@example.com
+                    role: user
+                    floor: 3
+                    companyName: OpenAI Pvt Ltd
+                    mobileNumber: "9876543210"
+                    building: Tower A
+
+        500:
+          description: Failed to fetch user list
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Failed to fetch userList
+
+  /api/user/users/{userId}:
+    delete:
+      summary: Delete a user
+      description: Delete a user by their unique ID.
+      tags:
+        - User
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          description: MongoDB user ID
+
+          schema:
+            type: string
+            example: 661b7c3d9a8f2c0012345678
+
+      responses:
+        200:
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+                  message:
+                    type: string
+                    example: User deleted successfully
+
+        404:
+          description: User not found
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+
+                  message:
+                    type: string
+                    example: User not found
+
+        500:
+          description: Failed to delete user
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+
+                  message:
+                    type: string
+                    example: Failed to delete user
+
+  # Complaint routes
+  /api/complaint:
+    post:
+      summary: Register a new complaint
+      description: Register a complaint with issue details and optional image uploads.
+      tags:
+        - Complaints
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+
+              required:
+                - title
+                - concernedDepartments
+                - daysFacingIssue
+                - description
+
+              properties:
+                title:
+                  type: string
+                  example: Water Leakage
+
+                concernedDepartments:
+                  type: string
+                  enum:
+                    - Electrical
+                    - Plumbing
+                    - Furniture
+                    - General
+                  example: General
+
+                daysFacingIssue:
+                  type: string
+                  example: 2
+
+                description:
+                  type: string
+                  example: Water leakage in washroom
+
+                building:
+                  type: string
+                  example: Vista Business Tower
+
+                image:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+
+      responses:
+        200:
+          description: Complaint registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  message:
+                    type: string
+                    example: Complaint registered successfully
+
+        500:
+          description: Failed to register complaint
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: An error occurred while registering the complaint
+
+    get:
+      summary: Get all complaints
+      description: Fetch the list of all registered complaints.
+      tags:
+        - Complaints
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        200:
+          description: Complaints fetched successfully
+          content:
+            application/json:
+              schema:
+                type: array
+
+                items:
+                  type: object
+                  example:
+                    _id: 661b7c3d9a8f2c0012345678
+                    complaintId: VST101
+                    userId: 661b7c3d9a8f2c0012345679
+                    concernedDepartments: Plumbing
+                    daysFacingIssue: 2
+                    description: Water leakage in washroom
+                    building: Vista Business Tower
+                    companyName: OpenAI Pvt Ltd
+                    status: Open
+                    severity: High
+                    image: []
+
+        500:
+          description: Failed to fetch complaints
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: An error occurred while fetching complaints
+
+  /api/complaint/admin/{complaintId}:
+    put:
+      summary: Update complaint by Admin
+      description: Update complaint status, severity, and add admin comments.
+      tags:
+        - Complaints
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          description: MongoDB complaint ID
+
+          schema:
+            type: string
+            example: 661b7c3d9a8f2c0012345678
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+
+              properties:
+                complaintStatus:
+                  type: string
+                  example: In Progress
+
+                adminComment:
+                  type: string
+                  example: Technician assigned, issue will be resolved today.
+
+                severity:
+                  type: string
+                  example: High
+
+            example:
+              complaintStatus: In Progress
+              adminComment: Technician assigned, issue will be resolved today.
+              severity: High
+
+      responses:
+        200:
+          description: Complaint updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  message:
+                    type: string
+                    example: Complaint updated successfully
+
+        404:
+          description: Complaint not found
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Complaint not found for this user
+
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Internal server error
+
+  /api/complaint/{complaintId}:
+    put:
+      summary: Update user complaints
+      description: Update complaint details by complaint ID.
+      tags:
+        - Complaints
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          description: Unique complaint ID
+
+          schema:
+            type: string
+            example: 661b7c3d9a8f2c0012345678
+
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+
+              properties:
+                title:
+                  type: string
+                  example: ""
+
+                concernedDepartments:
+                  type: string
+                  enum:
+                    - Electrical
+                    - Plumbing
+                    - Furniture
+                    - General
+                  example: ""
+
+                daysFacingIssue:
+                  type: string
+                  example: ""
+
+                description:
+                  type: string
+                  example: ""
+
+                building:
+                  type: string
+                  example: ""
+
+                image:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+
+      responses:
+        200:
+          description: Complaints updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  message:
+                    type: string
+                    example: success
+
+        400:
+          description: Failed to update complaints
+          content:
+            application/json:
+              schema:
+                type: object
+                example:
+                  error: Failed to update complaints
+
+    get:
+      summary: Get complaint details by ID
+      description: Retrieve complaint information using the unique complaint ID.
+      tags:
+        - Complaints
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          description: MongoDB complaint ID
+
+          schema:
+            type: string
+            example: 661b7c3d9a8f2c0012345678
+
+      responses:
+        200:
+          description: Complaint fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                example:
+                    _id: 661b7c3d9a8f2c0012345678
+                    complaintId: VST101
+                    userId: 661b7c3d9a8f2c0012345679
+                    floor: 3
+                    concernedDepartments: Plumbing
+                    daysFacingIssue: 2
+                    description: Water leakage in washroom
+                    building: Vista Business Tower
+                    companyName: OpenAI Pvt Ltd
+                    status: Open
+                    severity: High
+                    image: []
+
+        404:
+          description: Complaint not found
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Complaint not found
+
+        500:
+          description: Failed to fetch complaint by ID
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Failed to fetch complaint by ID
+
+    delete:
+      summary: Delete a complaint
+      description: Delete a complaint by its unique complaint ID.
+      tags:
+        - Complaints
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: complaintId
+          required: true
+          description: MongoDB complaint ID
+
+          schema:
+            type: string
+            example: 661b7c3d9a8f2c0012345678
+
+      responses:
+        200:
+          description: Complaint deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  message:
+                    type: string
+                    example: Complaint deleted successfully
+
+        404:
+          description: Complaint not found
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Complaint not found
+
+        500:
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Internal server error
+
+  /api/complaint/assign-technician:
+    patch:
+      summary: Assign complaint to technician
+      description: Admin can assign a complaint to a specific technician.
+      tags:
+        - Complaints
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+
+              required:
+                - complaintId
+                - technicianId
+
+              properties:
+                complaintId:
+                  type: string
+                  example: 664b7c3d9a8f2c0012345678
+
+                technicianId:
+                  type: string
+                  example: 664b7c3d9a8f2c0012349999
+
+      responses:
+        200:
+          description: Technician assigned successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+                  message:
+                    type: string
+                    example: Technician assigned successfully
+
+        400:
+          description: Invalid request data
+
+        404:
+          description: Complaint or technician not found
+
+  /api/complaint/technician-status:
+    patch:
+      summary: Update complaint status by technician
+      description: Assigned technician can update status for a complaint.
+      tags:
+        - Complaints
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+
+              required:
+                - complaintId
+                - complaintStatus
+
+              properties:
+                complaintId:
+                  type: string
+                  example: 664b7c3d9a8f2c0012345678
+
+                complaintStatus:
+                  type: string
+                  example: Pending
+
+      responses:
+        200:
+          description: Complaint status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+                  message:
+                    type: string
+                    example: Complaint status updated successfully
+
+        400:
+          description: Invalid request data
+
+        404:
+          description: Complaint not found
+
+  /api/complaint/status/{status}:
+    get:
+      summary: Get complaints by status
+      description: Fetch all complaints filtered by complaint status with pagination support.
+      tags:
+        - Complaints
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: status
+          required: true
+          schema:
+            type: string
+            enum:
+              - Pending
+              - In Progress
+              - Resolved
+          description: Complaint status
+
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+          description: Page number
+
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+          description: Number of records per page
+
+      responses:
+        200:
+          description: Complaints fetched successfully
+
+        400:
+          description: Invalid complaint status
+
+        401:
+          description: Unauthorized
+
+        500:
+          description: Internal server error
+
+# Post routes
+  /api/post:
+    post:
+      summary: Create a new post
+      description: Create a new post with title, description, and optional image.
+      tags:
+        - Posts
+
+      security:
+        - bearerAuth: []
+
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+
+              properties:
+                title:
+                  type: string
+                  example: Quick Tip
+
+                description:
+                  type: string
+                  example: Focus on progress, not perfection. Every step forward counts.
+
+                image:
+                  type: array
+
+                  items:
+                    type: string
+                    format: binary
+
+      responses:
+        201:
+          description: Post added successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+        400:
+          description: Description or image is required
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+
+                  error:
+                    type: string
+                    example: At least one of description or image is required.
+
+        401:
+          description: Unauthorized
+
+        500:
+          description: Failed to create post
+
+    get:
+      summary: Get all posts
+      description: Fetch all available posts with pagination support.
+      tags:
+        - Posts
+
+      parameters:
+        - in: query
+          name: page
+          required: false
+          description: Page number (default is 1)
+
+          schema:
+            type: integer
+            example: 1
+
+        - in: query
+          name: limit
+          required: false
+          description: Number of posts per page (default is 10)
+
+          schema:
+            type: integer
+            example: 20
+
+      responses:
+        200:
+          description: Posts fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+                  data:
+                    type: array
+
+                    items:
+                      type: object
+                      example:
+                        _id: 661b7c3d9a8f2c0012345678
+                        postedBy: 661b7c3d9a8f2c0012345679
+                        description: This is my first post
+                        createdAt: 2026-04-14T10:00:00.000Z
+
+        500:
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+
+                  error:
+                    type: string
+                    example: Server Error
+
+  /api/post/{postId}:
+    put:
+      summary: Update a Post
+      description: Update post details such as title, description, or image by post ID.
+      tags:
+        - Posts
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          description: MongoDB user ID
+
+          schema:
+            type: string
+            example: 661b7c3d9a8f2c0012345678
+
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+
+              properties:
+                title:
+                  type: string
+                  example: ""
+
+                description:
+                  type: string
+                  example: ""
+
+                image:
+                  type: array
+
+                  items:
+                    type: string
+                    format: binary
+
+      responses:
+        200:
+          description: Update Post By Id
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+                  data:
+                    type: array
+
+                    items:
+                      type: object
+                      example:
+                        _id: 661b7c3d9a8f2c0012345678
+                        title: Hello world
+                        postedBy: 661b7c3d9a8f2c0012345679
+                        description: This is my first post
+                        createdAt: 2026-04-14T10:00:00.000Z
+                        updatedAt: 2026-04-15T06:57:23.082Z
+                        image: 1776236243025-242822929.png
+                        __v: 0
+                        imageUrl: http://localhost:3000/uploads/post/1776236243025-242822929.png
+
+        500:
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+
+                  error:
+                    type: string
+                    example: Server Error
+
+    get:
+      summary: Get post details by ID
+      description: Retrieve post information using the unique post ID.
+      tags:
+        - Posts
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          description: MongoDB post ID
+
+          schema:
+            type: string
+            example: 661b7c3d9a8f2c0012345678
+
+      responses:
+        200:
+          description: Post fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                example:
+                  _id: 661b7c3d9a8f2c0012345678
+                  posted_by: 661b7c3d9a8f2c0012345679
+                  description: This is my first post
+                  createdAt: 2026-04-14T10:00:00.000Z
+
+        404:
+          description: Post not found
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Post not found
+
+        500:
+          description: Failed to fetch post by ID
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  error:
+                    type: string
+                    example: Failed to fetch post by ID
+
+    delete:
+      summary: Delete a Post
+      description: Delete a post by its ID.
+      tags:
+        - Posts
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: path
+          name: postId
+          required: true
+          description: MongoDB user ID
+
+          schema:
+            type: string
+            example: 661b7c3d9a8f2c0012345678
+
+      responses:
+        200:
+          description: Update Post By Id
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+                  data:
+                    type: array
+
+                    items:
+                      type: object
+                      example:
+                        message: Post deleted
+                        title: Hello world
+
+        500:
+          description: Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+
+                  error:
+                    type: string
+                    example: Server Error
+
+# Notification routes
+  /api/notification:
+    get:
+      summary: Get all notifications for logged-in user
+      tags:
+        - Notification
+
+      security:
+        - bearerAuth: []
+
+      parameters:
+        - in: query
+          name: page
+          description: Page number (default = 1)
+
+          schema:
+            type: integer
+            example: 1
+
+        - in: query
+          name: limit
+          description: Number of records per page (max = 50)
+
+          schema:
+            type: integer
+            example: 10
+
+      responses:
+        200:
+          description: Notifications fetched successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+                  message:
+                    type: string
+                    example: Notifications fetched successfully
+
+                  data:
+                    type: array
+
+                    items:
+                      type: object
+
+                      properties:
+                        _id:
+                          type: string
+                          example: 664f1c2a9c1234567890abcd
+
+                        message:
+                          type: string
+                          example: New post: Water issue fixed
+
+                        status:
+                          type: string
+                          example: UNREAD
+
+                        type:
+                          type: string
+                          example: POST
+
+                        referenceId:
+                          type: object
+
+                          properties:
+                            _id:
+                              type: string
+                              example: 664f1c2a9c1234567890efgh
+
+                            title:
+                              type: string
+                              example: Water issue fixed
+
+                            description:
+                              type: string
+                              example: Issue resolved in sector 5
+
+                            image:
+                              type: array
+
+                              items:
+                                type: string
+                                example: https://example.com/image.jpg
+
+                        createdBy:
+                          type: object
+
+                          properties:
+                            _id:
+                              type: string
+                              example: 664f1c2a9c1234567890user
+
+                            name:
+                              type: string
+                              example: Admin User
+
+                            email:
+                              type: string
+                              example: admin@example.com
+
+                        createdAt:
+                          type: string
+                          example: 2026-05-05T10:00:00.000Z
+
+                  pagination:
+                    type: object
+
+                    properties:
+                      total:
+                        type: integer
+                        example: 45
+
+                      page:
+                        type: integer
+                        example: 1
+
+                      limit:
+                        type: integer
+                        example: 10
+
+                      totalPages:
+                        type: integer
+                        example: 5
+
+                  meta:
+                    type: object
+
+                    properties:
+                      unreadCount:
+                        type: integer
+                        example: 12
+
+        401:
+          description: Unauthorized (invalid or missing token)
+
+        500:
+          description: Failed to fetch notifications
+
+    delete:
+      summary: Delete notification(s) for logged-in user
+      tags:
+        - Notification
+
+      security:
+        - bearerAuth: []
+
+      description: |
+        Delete notifications of the authenticated user.
+
+        - Pass `deleteAll: true` to remove all notifications.
+        - Or pass `notificationIds` array to delete specific notifications.
+        - If some IDs do not exist or do not belong to the user, they will be returned in `missingIds`.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+
+              properties:
+                notificationIds:
+                  type: array
+                  description: Array of notification IDs to delete
+
+                  items:
+                    type: string
+
+                  example:
+                    - 664f1c2a9c1234567890abcd
+                    - 664f1c2a9c1234567890efgh
+
+                deleteAll:
+                  type: boolean
+                  example: false
+                  description: Set true to delete all notifications of the user
+
+      responses:
+        200:
+          description: Notification(s) deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+                  message:
+                    type: string
+                    example: Notification(s) deleted successfully
+
+                  deletedCount:
+                    type: integer
+                    example: 2
+
+                  missingIds:
+                    type: array
+                    description: IDs that were not found or not owned by the user
+
+                    items:
+                      type: string
+
+                    example:
+                      - invalidId123
+
+        400:
+          description: Invalid request body
+
+        401:
+          description: Unauthorized (invalid or missing token)
+
+        500:
+          description: Failed to delete notifications
+
+  /api/notification/read-all:
+    patch:
+      summary: Mark all notifications as read
+      description: Marks all unread notifications of the logged-in user as READ and sets the read timestamp.
+      tags:
+        - Notification
+
+      security:
+        - bearerAuth: []
+
+      responses:
+        200:
+          description: Notifications processed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+
+                  message:
+                    type: string
+                    example: All unread notifications marked as read
+
+                  modifiedCount:
+                    type: integer
+                    example: 5
+
+        401:
+          description: Unauthorized - Token missing or invalid
+
+        500:
+          description: Internal server error
