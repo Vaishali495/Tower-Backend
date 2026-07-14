@@ -10,8 +10,9 @@ const __dirname = path.dirname(__filename);
 // Read service account safely
 
 // const serviceAccountPath = path.join("/etc/secrets/serviceFile.json");
-const serviceAccountPath = path.join(__dirname, "./serviceFile.json");
-// const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '/etc/secrets/serviceFile.json';
+// const serviceAccountPath = path.join("./serviceFile.json");
+// const serviceAccountPath = path.join(__dirname, "./serviceFile.json");
+const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH || '/etc/secrets/serviceFile.json';
 
 // Initialize Firebase Admin SDK safely
 if (!admin.apps.length) {
